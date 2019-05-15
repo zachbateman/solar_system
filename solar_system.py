@@ -7,9 +7,6 @@ import random
 # import copy
 import tqdm
 import math
-# import time
-# import datetime
-# from pprint import pprint as pp
 # from functools import lru_cache
 
 # import numpy as np
@@ -25,14 +22,6 @@ import cython_collision
 Position = collections.namedtuple('Position', ['x', 'y', 'z'])
 Velocity = collections.namedtuple('Velocity', ['x', 'y', 'z'])
 
-
-# TOTAL_TIME =  10000  # number of time steps!!!
-# NUMBER_OF_INITIAL_SPACEBODIES =  500
-# TIME_STEP_DAYS = 5   # DAYS
-
-# ANIMATION_INTERVAL = 30  # milliseconds
-# FRAME_SAMPLE_RATE = 10 #5 #15
-# ANIMATION_FILENAME = f'SimulationVideos\\SolarSim - TOTAL_TIME {TOTAL_TIME}  NUM_SB {NUMBER_OF_INITIAL_SPACEBODIES}.mp4'
 
 
 class SolarSim():
@@ -53,7 +42,7 @@ class SolarSim():
     MASS_TO_SIZE_RATIO = 1 / 10 ** 17.6
 
     # MAX_INITIAL_HEAT = 10 ** 4 #Kelvin???
-    # 10**12.8 meters is roughly diameter of our solar system (pluto's orbit)
+    # 10**12.8 meters is roughly diameter of our solar system (Pluto's orbit)
     MAX_X_INITIAL_POS = 2 * (10 ** 12.8)  # meters  --> starting 2x solar system diameter
     MAX_Y_INITIAL_POS = 2 * (10 ** 12.8)  # meters --> starting 2x solar system diameter
     MAX_Z_INITIAL_POS = 10 ** 12.5  # meters  # was 10**12.3
@@ -119,7 +108,7 @@ class SolarSim():
         initial_colors = [cmap(normalize(size)) for size in initial_size]
         scatter = ax.scatter(initial_x, initial_y, initial_z, s=initial_size, c=initial_colors, vmin=0, vmax=self.MAX_COLOR_VALUE, alpha=1.0)
 
-        pbar = tqdm.tqdm(total=self.TOTAL_TIME, ascii=True)
+        pbar = tqdm.tqdm(total=self.TOTAL_TIME)
 
         def update(frame_number):
             # x = [sb.position.x for sb in solar_system_data[frame_number]]
@@ -143,7 +132,14 @@ class SolarSim():
 
 
         ss_animation = animation.FuncAnimation(fig, update, frames=[period for period in range(self.TOTAL_TIME) if period % self.FRAME_SAMPLE_RATE == 0], interval=self.ANIMATION_INTERVAL)
-        ss_animation.save(self.ANIMATION_FILENAME + f'  ELEV_ANGLE {ELEVATION_ANGLE}' + '.mp4')
+        # NEED FFMPEG INSTALLED FOR ANIMATION SAVING/CONVERSION TO .MP4!!!
+        try:
+            ss_animation.save(self.ANIMATION_FILENAME + f'  ELEV_ANGLE {ELEVATION_ANGLE}' + '.mp4')
+        except:
+            traceback.print_exc()
+            print('ERROR!  Unable to save animation.')
+            print('Please check that ffmpeg is installed and added to your PATH!')
+
         # See:  https://matplotlib.org/api/_as_gen/matplotlib.pyplot.close.html
         plt.close(fig)  # clears memory of fig object; otherwise memory can overflow
         # plt.close('all')  # try this if above line doesn't work
@@ -153,7 +149,7 @@ class SolarSim():
     def simulate_solar_system(self) -> dict:
         spacebodies = self.create_initial_environment()
         solar_system_data = {0: [SpaceBody(sb.id, sb.mass, sb.position, sb.velocity) for sb in spacebodies]}
-        pbar = tqdm.tqdm(total=self.TOTAL_TIME, ascii=True)
+        pbar = tqdm.tqdm(total=self.TOTAL_TIME)
         for period in range(1, self.TOTAL_TIME):
 
             spacebodies_data = [(sb.id, sb.mass, sb.position.x, sb.position.y, sb.position.z) for sb in spacebodies]
@@ -203,16 +199,9 @@ class SolarSim():
             initial_mass = random.uniform(self.AVG_INITIAL_MASS * 0.25, self.AVG_INITIAL_MASS * 1.75)
             # initial_heat = random.uniform(0, MAX_INITIAL_HEAT)
 
-            # initial_x_pos = random.uniform(0, MAX_X_INITIAL_POS) #uniform dist
-            # initial_y_pos = random.uniform(0, MAX_Y_INITIAL_POS) #uniform dist
-            # initial_z_pos = random.uniform(0, MAX_Z_INITIAL_POS) #uniform dist
-            initial_x_pos = random.gauss(self.MAX_X_INITIAL_POS / 2, self.MAX_X_INITIAL_POS * 0.25) #gaussian dist
-            initial_y_pos = random.gauss(self.MAX_Y_INITIAL_POS / 2, self.MAX_Y_INITIAL_POS * 0.25) #gaussian dist
-            initial_z_pos = random.gauss(self.MAX_Z_INITIAL_POS / 2, self.MAX_Z_INITIAL_POS * 0.25) #gaussian dist
-            # initial_x_pos = random.triangular(0, MAX_X_INITIAL_POS/2, MAX_X_INITIAL_POS) #triangular dist
-            # initial_y_pos = random.triangular(0, MAX_Y_INITIAL_POS/2, MAX_Y_INITIAL_POS) #triangular dist
-            # initial_z_pos = random.triangular(0, MAX_Z_INITIAL_POS/2, MAX_Z_INITIAL_POS) #triangular dist
-
+            initial_x_pos = random.gauss(self.MAX_X_INITIAL_POS / 2, self.MAX_X_INITIAL_POS * 0.25)  # gaussian dist
+            initial_y_pos = random.gauss(self.MAX_Y_INITIAL_POS / 2, self.MAX_Y_INITIAL_POS * 0.25)  # gaussian dist
+            initial_z_pos = random.gauss(self.MAX_Z_INITIAL_POS / 2, self.MAX_Z_INITIAL_POS * 0.25)  # gaussian dist
 
             initial_x_vel = random.uniform(-self.MAX_INITIAL_ABS_VEL, self.MAX_INITIAL_ABS_VEL)
             initial_y_vel = random.uniform(-self.MAX_INITIAL_ABS_VEL, self.MAX_INITIAL_ABS_VEL)
@@ -282,11 +271,8 @@ class SpaceBody():
                                              self.position.y * (self_pct) + other.position.y * (other_pct),
                                              self.position.z * (self_pct) + other.position.z * (other_pct))
         new_velocity = Velocity(self.velocity.x * (self_pct) + other.velocity.x * (other_pct),
-                                         self.velocity.y * (self_pct) + other.velocity.y * (other_pct),
-                                         self.velocity.z * (self_pct) + other.velocity.z * (other_pct))
-        # new_velocity = Velocity((self.velocity.x * (self_pct) + other.velocity.x * (other_pct)) * 0.9,
-                                            # (self.velocity.y * (self_pct) + other.velocity.y * (other_pct)) * 0.9,
-                                            # (self.velocity.z * (self_pct) + other.velocity.z * (other_pct)) * 0.9)
+                                             self.velocity.y * (self_pct) + other.velocity.y * (other_pct),
+                                             self.velocity.z * (self_pct) + other.velocity.z * (other_pct))
         return SpaceBody(new_id, new_mass, new_position, new_velocity)
         '''
         else:
@@ -378,4 +364,4 @@ def area_from_vol(volume: float) -> float:
 
 
 if __name__ == '__main__':
-    x = SolarSim(TOTAL_TIME=50000, INITIAL_SPACEBODIES=5000, ANIMATION_INTERVAL=50, FRAME_SAMPLE_RATE=15)
+    x = SolarSim(TOTAL_TIME=10000, INITIAL_SPACEBODIES=150, ANIMATION_INTERVAL=50, FRAME_SAMPLE_RATE=15)
