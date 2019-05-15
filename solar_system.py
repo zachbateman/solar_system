@@ -247,15 +247,18 @@ class SpaceBody():
         g_force_x, g_force_y, g_force_z = cython_force_calc.calc_composite_force_vector(SolarSim.GRAVITATIONAL_CONSTANT, self, spacebodies_data)
 
         # V2 = V1 + a*t    -->   a = Force/Mass
-        # t_mass = SolarSim.TIME_STEP_SECONDS / self.mass #pulling out from below to save 2 calculations
-        self.velocity = Velocity(self.velocity.x + g_force_x * self.t_mass,
-                                           self.velocity.y + g_force_y * self.t_mass,
-                                           self.velocity.z + g_force_z * self.t_mass)
+        self_velocity, t_mass = self.velocity, self.t_mass  # local variables for speed
+
+        self.velocity = Velocity(self_velocity.x + g_force_x * t_mass,
+                                           self_velocity.y + g_force_y * t_mass,
+                                           self_velocity.z + g_force_z * t_mass)
 
     def set_new_position(self):
-        self.position = Position(self.position.x + self.velocity.x * SolarSim.TIME_STEP_SECONDS,
-                                           self.position.y + self.velocity.y * SolarSim.TIME_STEP_SECONDS,
-                                           self.position.z + self.velocity.z * SolarSim.TIME_STEP_SECONDS)
+        self_position, self_velocity = self.position, self.velocity  # local variables for speed
+        time_step_seconds = SolarSim.TIME_STEP_SECONDS  # local variable for speed
+        self.position = Position(self_position.x + self_velocity.x * time_step_seconds,
+                                           self_position.y + self_velocity.y * time_step_seconds,
+                                           self_position.z + self_velocity.z * time_step_seconds)
 
     def distance_from_center(self) -> float:
         return ((self.position.x - SolarSim.CENTER_X)**2 + (self.position.y - SolarSim.CENTER_Y)**2 + (self.position.z - SolarSim.CENTER_Z)**2) ** 0.5
