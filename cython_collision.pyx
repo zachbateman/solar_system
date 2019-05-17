@@ -2,9 +2,7 @@
 Pulling out expensive calculations to CYTHON
 '''
 import cython
-# import copy
 
-# needs to be "def" b/c the sorting lambda at the bottom doesn't work with "cpdef"!!!
 # For decorator usage see:  https://stackoverflow.com/questions/4709285/cython-float-division-pyexc-zerodivisionerror-checking?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 @cython.cdivision(True)
 cpdef calc_collisions(list spacebodies, list spacebodies_copy, double TOTAL_MASS, double MAX_DISTANCE_OF_IMPACT):
@@ -30,7 +28,7 @@ cpdef calc_collisions(list spacebodies, list spacebodies_copy, double TOTAL_MASS
         for sb2 in spacebodies:
             sb2id = sb2.id
             if sbid != sb2id:
-                sb2x, sb2y, sb2z = sb2.position.x, sb2.position.y, sb2.position.z
+                sb2x, sb2y, sb2z = sb2.position[0], sb2.position[1], sb2.position[2]
                 sb2mass = sb2.mass
 
                 distance = ((sbx - sb2x) ** 2 + (sby - sb2y) ** 2 + (sbz - sb2z) ** 2) ** 0.5
@@ -57,8 +55,6 @@ cpdef calc_collisions(list spacebodies, list spacebodies_copy, double TOTAL_MASS
 
     for id_list in sb_ids_to_combine:
         spacebodies_to_combine = [sb for sb in spacebodies_copy if sb.id in id_list]
-        # DON'T USE DICTIONARY LOOKUP METHOD!!! CAUSES ISSUES!!!! (different/same object issues)
-        # spacebodies_to_combine = [spacebodies_copy_dict[id] for id in id_list]
         result = spacebodies_to_combine[0]
         for sb in spacebodies_to_combine[1:]:
             result += sb
