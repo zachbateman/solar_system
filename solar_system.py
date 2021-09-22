@@ -275,7 +275,7 @@ def area_from_vol(volume: float) -> float:
     Area = pi * (r) **2
     Area = pi * (Volume / ((4/3)*pi)) ** (2/3)
     '''
-    return math.pi * (volume / ((4 / 3) * math.pi)) ** (2 / 3)
+    return math.pi * (volume / 4.1888) ** (0.6667)
 
 
 
